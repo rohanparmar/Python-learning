@@ -1,0 +1,133 @@
+name: Fetch Srota Conversational Hinglish ASR
+
+on:
+  push:
+    branches:
+      - tmp/open-whisper-model-20260812
+    paths:
+      - .open-model/trigger-srota-conv.txt
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Download minimal offline Python wheels
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p wheels
+          python -m pip download --dest wheels --only-binary=:all: --no-deps \
+            qwen-asr==0.0.6 \
+            transformers==4.57.6 \
+            tokenizers==0.22.1 \
+            huggingface-hub==0.36.0
+          sha256sum wheels/* > wheels/SHA256SUMS.txt
+          ls -lh wheels
+
+      - name: Download Srota conversational model and split weights
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet 'huggingface_hub==0.36.0'
+          python - <<'PY'
+          from huggingface_hub import snapshot_download
+          snapshot_download(
+              repo_id='moorlee/qwen3-asr-0.6b-hinglish-hiacc-v1',
+              local_dir='model',
+              local_dir_use_symlinks=False,
+          )
+          PY
+          rm -rf model/.cache
+          mkdir -p metadata split
+          sha256sum model/model.safetensors > split/model.safetensors.sha256
+          split -b 300000000 -d -a 2 model/model.safetensors split/model.safetensors.part-
+          sha256sum split/model.safetensors.part-* > split/parts.sha256
+          find model -maxdepth 1 -type f ! -name 'model.safetensors' -exec cp {} metadata/ \;
+          sha256sum metadata/* > metadata/SHA256SUMS.txt
+          du -sh model
+          ls -lh split metadata
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: srota-python-wheels
+          path: wheels/
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Upload metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: srota-conv-metadata
+          path: metadata/
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Upload weight part 00
+        uses: actions/upload-artifact@v4
+        with:
+          name: srota-conv-weight-part-00
+          path: |
+            split/model.safetensors.part-00
+            split/model.safetensors.sha256
+            split/parts.sha256
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Upload weight part 01
+        uses: actions/upload-artifact@v4
+        with:
+          name: srota-conv-weight-part-01
+          path: split/model.safetensors.part-01
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Upload weight part 02
+        uses: actions/upload-artifact@v4
+        with:
+          name: srota-conv-weight-part-02
+          path: split/model.safetensors.part-02
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Upload weight part 03
+        uses: actions/upload-artifact@v4
+        with:
+          name: srota-conv-weight-part-03
+          path: split/model.safetensors.part-03
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Upload weight part 04
+        uses: actions/upload-artifact@v4
+        with:
+          name: srota-conv-weight-part-04
+          path: split/model.safetensors.part-04
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Upload weight part 05
+        uses: actions/upload-artifact@v4
+        with:
+          name: srota-conv-weight-part-05
+          path: split/model.safetensors.part-05
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: ignore
