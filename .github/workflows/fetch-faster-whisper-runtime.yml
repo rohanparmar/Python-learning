@@ -1,0 +1,41 @@
+name: Fetch faster-whisper offline runtime
+
+on:
+  push:
+    branches:
+      - tmp/open-whisper-model-20260812
+    paths:
+      - .open-model/trigger-faster-whisper-runtime.txt
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Download binary wheels and dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p wheels
+          python -m pip download --dest wheels --only-binary=:all: \
+            faster-whisper ctranslate2 av onnxruntime
+          sha256sum wheels/* > wheels/SHA256SUMS.txt
+          ls -lh wheels
+
+      - name: Upload offline runtime
+        uses: actions/upload-artifact@v4
+        with:
+          name: faster-whisper-runtime-py313
+          path: wheels/
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
