@@ -1,0 +1,1 @@
+Fetch the Apache-2.0 Srota conversational Hinglish ASR model and minimal offline runtime wheels for local-only transcription.
