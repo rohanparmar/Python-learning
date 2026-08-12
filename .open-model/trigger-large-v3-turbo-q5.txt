@@ -1,0 +1,1 @@
+Fetch the official open whisper.cpp Large v3 Turbo Q5 checkpoint in connector-sized, checksum-verifiable pieces.
