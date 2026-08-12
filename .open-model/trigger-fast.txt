@@ -1,0 +1,1 @@
+Fetch official multilingual Whisper Base/Tiny quantized checkpoints and Silero VAD for local transcription.
