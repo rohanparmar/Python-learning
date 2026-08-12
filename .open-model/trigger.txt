@@ -1,0 +1,1 @@
+Fetch the open multilingual Whisper Small Q5_1 checkpoint for local Hindi-English-Hinglish transcription.
