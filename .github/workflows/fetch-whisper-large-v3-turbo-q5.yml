@@ -1,0 +1,107 @@
+name: Fetch official Whisper Large v3 Turbo Q5
+
+on:
+  push:
+    branches:
+      - tmp/open-whisper-model-20260812
+    paths:
+      - .open-model/trigger-large-v3-turbo-q5.txt
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download official whisper.cpp checkpoint and split
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p model split
+          curl -L --fail --retry 5 --retry-all-errors --connect-timeout 30 \
+            -o model/ggml-large-v3-turbo-q5_0.bin \
+            'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo-q5_0.bin'
+          sha256sum model/ggml-large-v3-turbo-q5_0.bin > model/model.sha256
+          split -b 125000000 -d -a 2 model/ggml-large-v3-turbo-q5_0.bin split/ggml-large-v3-turbo-q5_0.bin.part-
+          cp model/model.sha256 split/
+          sha256sum split/ggml-large-v3-turbo-q5_0.bin.part-* > split/parts.sha256
+          ls -lh model split
+
+      - name: Upload part 00
+        uses: actions/upload-artifact@v4
+        with:
+          name: whisper-large-v3-turbo-q5-part-00
+          path: |
+            split/ggml-large-v3-turbo-q5_0.bin.part-00
+            split/model.sha256
+            split/parts.sha256
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Upload part 01
+        uses: actions/upload-artifact@v4
+        with:
+          name: whisper-large-v3-turbo-q5-part-01
+          path: split/ggml-large-v3-turbo-q5_0.bin.part-01
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Upload part 02
+        uses: actions/upload-artifact@v4
+        with:
+          name: whisper-large-v3-turbo-q5-part-02
+          path: split/ggml-large-v3-turbo-q5_0.bin.part-02
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Upload part 03
+        uses: actions/upload-artifact@v4
+        with:
+          name: whisper-large-v3-turbo-q5-part-03
+          path: split/ggml-large-v3-turbo-q5_0.bin.part-03
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Upload part 04
+        uses: actions/upload-artifact@v4
+        with:
+          name: whisper-large-v3-turbo-q5-part-04
+          path: split/ggml-large-v3-turbo-q5_0.bin.part-04
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: ignore
+
+      - name: Upload part 05
+        uses: actions/upload-artifact@v4
+        with:
+          name: whisper-large-v3-turbo-q5-part-05
+          path: split/ggml-large-v3-turbo-q5_0.bin.part-05
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: ignore
+
+      - name: Upload part 06
+        uses: actions/upload-artifact@v4
+        with:
+          name: whisper-large-v3-turbo-q5-part-06
+          path: split/ggml-large-v3-turbo-q5_0.bin.part-06
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: ignore
+
+      - name: Upload part 07
+        uses: actions/upload-artifact@v4
+        with:
+          name: whisper-large-v3-turbo-q5-part-07
+          path: split/ggml-large-v3-turbo-q5_0.bin.part-07
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: ignore
