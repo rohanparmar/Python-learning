@@ -1,0 +1,84 @@
+name: Fetch open Whisper Large v3 Turbo INT8 split
+
+on:
+  push:
+    branches:
+      - tmp/open-whisper-model-20260812
+    paths:
+      - .open-model/trigger-large-v3-turbo-split.txt
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Download CTranslate2 INT8 model and split weights
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet 'huggingface_hub>=0.30,<2'
+          python - <<'PY'
+          from huggingface_hub import snapshot_download
+          snapshot_download(
+              repo_id='Zoont/faster-whisper-large-v3-turbo-int8-ct2',
+              local_dir='model',
+              local_dir_use_symlinks=False,
+          )
+          PY
+          rm -rf model/.cache
+          sha256sum model/model.bin > model/model.bin.sha256
+          mkdir -p split metadata
+          split -b 300000000 -d -a 2 model/model.bin split/model.bin.part-
+          cp model/model.bin.sha256 split/
+          find model -maxdepth 1 -type f ! -name 'model.bin' ! -name 'model.bin.sha256' -exec cp {} metadata/ \;
+          sha256sum split/model.bin.part-* > split/parts.sha256
+          sha256sum metadata/* > metadata/SHA256SUMS.txt
+          ls -lh split metadata
+
+      - name: Upload weight part 00
+        uses: actions/upload-artifact@v4
+        with:
+          name: large-v3-turbo-int8-weight-part-00
+          path: |
+            split/model.bin.part-00
+            split/model.bin.sha256
+            split/parts.sha256
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Upload weight part 01
+        uses: actions/upload-artifact@v4
+        with:
+          name: large-v3-turbo-int8-weight-part-01
+          path: split/model.bin.part-01
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Upload weight part 02
+        uses: actions/upload-artifact@v4
+        with:
+          name: large-v3-turbo-int8-weight-part-02
+          path: split/model.bin.part-02
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Upload model metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: large-v3-turbo-int8-metadata
+          path: metadata/
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
