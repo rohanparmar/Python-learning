@@ -1,0 +1,42 @@
+name: Fetch open Whisper model
+
+on:
+  push:
+    branches:
+      - tmp/open-whisper-model-20260812
+    paths:
+      - .open-model/trigger.txt
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download multilingual Whisper Small Q5_1
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p model
+          primary='https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small-q5_1.bin'
+          fallback='https://github.com/w3xgroup/taskurio-models/releases/download/whisper-models-v1/ggml-small-q5_1.bin'
+          curl -L --fail --retry 5 --retry-all-errors --connect-timeout 30 \
+            -o model/ggml-small-q5_1.bin "$primary" \
+          || curl -L --fail --retry 5 --retry-all-errors --connect-timeout 30 \
+            -o model/ggml-small-q5_1.bin "$fallback"
+          echo 'ae85e4a935d7a567bd102fe55afc16bb595bdb618e11b2fc7591bc08120411bb  model/ggml-small-q5_1.bin' | sha256sum -c -
+          sha256sum model/ggml-small-q5_1.bin > model/SHA256SUMS.txt
+          ls -lh model/
+
+      - name: Upload model bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: whisper-small-q5_1-model
+          path: model/
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
