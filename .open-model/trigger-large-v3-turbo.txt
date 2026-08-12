@@ -1,0 +1,1 @@
+Fetch an open INT8 CTranslate2 conversion of Whisper Large v3 Turbo for local multilingual ASR.
